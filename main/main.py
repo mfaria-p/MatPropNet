@@ -9,7 +9,7 @@ import datetime
 sys.path.append('/main')
 from model import build_model
 from data import get_data_one
-from model import train_model
+from model import train_model, save_model
 
 #You can use this to write Python programs which can be customized by end users easily.
 def read_config(file_path):
