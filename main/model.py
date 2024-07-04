@@ -2,6 +2,8 @@ import tensorflow as tf
 from tensorflow.keras.layers import Input, Dense, Dropout  # TensorFlow/Keras layers for building the model
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam, RMSprop, Adagrad, Adadelta
+from tensorflow.keras.utils import plot_model
+import numpy as np
 
 def build_model(embedding_size = 63, lr = 0.01, optimizer = 'adam', depth = 2, 
 	scale_output = 0.05, padding = True, hidden = 0, hidden2 = 0, loss = 'mse', hidden_activation = 'tanh',
@@ -122,6 +124,116 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 	(train, val, test) = data
 	cbu_train = train['cbu']; y_train = train['y']
 	cbu_val   = val['cbu'];   y_val   = val['y']
-	print('{} to train on'.format(len(mols_train)))
-	print('{} to validate on'.format(len(mols_val)))
-	print('{} to test on'.format(len(smiles_val)))
+	print('{} to train on'.format(len(y_train)))
+	print('{} to validate on'.format(len(y_val)))
+	#print('{} to test on'.format(len(smiles_val)))
+
+	# Create learning rate function
+	if lr_func:
+		lr_func_string = 'def lr(epoch):\n    return {}\n'.format(lr_func)
+		exec(lr_func_string)
+
+
+	# Fit (allows keyboard interrupts in the middle)
+	# Because molecular graph tensors are different sizes based on N_atoms, can only do one at a time
+	# (alternative is to pad with zeros and try to add some masking feature to GraphFP)
+	# -> this is why batch_size == 1 is treated distinctly
+	try:
+		loss = []
+		val_loss = []
+		nb_epoch = int(nb_epoch)
+		batch_size = int(batch_size)
+		patience = int(patience)
+
+		if batch_size == 1: # DO NOT NEED TO PAD
+			print("entrei aquiii")
+			wait = 0
+			prev_best_val_loss = 99999999
+			for i in range(nb_epoch):
+				this_loss = []
+				this_val_loss = []
+				if lr_func: model.optimizer.learning_rate.set_value(lr(i))
+				print('Epoch {}/{}, lr = {}'.format(i + 1, nb_epoch, model.optimizer.learning_rate.numpy()))
+
+				plot_model(model, show_shapes=True)
+
+				# Run through training set
+				if verbose: print('Training...')
+				training_order = list(range(len(y_train)))
+				np.random.shuffle(training_order)
+				for j in training_order:
+					single_z = np.array(cbu_train[j])
+					print(single_z.shape)
+					single_y_as_array = np.reshape(y_train[j], (1, -1))
+					sloss = model.train_on_batch(
+						[single_z],
+						single_y_as_array
+					)
+					this_loss.append(sloss)
+
+				# Run through testing set
+				if verbose: print('Validating..')
+				for j in range(len(y_val)):
+					single_z = np.array(cbu_val[j])
+					single_y_as_array = np.reshape(y_val[j], (1, -1))
+					sloss = model.test_on_batch(
+						[single_z],
+						single_y_as_array
+					)					
+					this_val_loss.append(sloss)
+				
+				loss.append(np.mean(this_loss))
+				val_loss.append(np.mean(this_val_loss))
+				print('loss: {}\tval_loss: {}'.format(loss[i], val_loss[i]))
+
+				# Check progress
+				if np.mean(this_val_loss) < prev_best_val_loss:
+					wait = 0
+					prev_best_val_loss = np.mean(this_val_loss)
+					if patience == -1:
+						model.save_weights('best.h5', overwrite=True)
+				else:
+					wait = wait + 1
+					print('{} epochs without val_loss progress'.format(wait))
+					if wait == patience:
+						print('stopping early!')
+						break
+			if patience == -1:
+				model.load_weights('best.h5')
+
+		else: 
+			# When the batch_size is larger than one, we have padded mol tensors
+			# which  means we need to concatenate them but can use Keras' built-in
+			# training functions with callbacks, validation_split, etc.
+			if lr_func:
+				callbacks = [LearningRateScheduler(lr)]
+			else:
+				callbacks = []
+			if patience != -1:
+				callbacks.append(EarlyStopping(patience = patience, verbose = 1))
+
+			if mols_val:
+				mols = np.vstack((mols_train, mols_val))
+				y = np.concatenate((y_train, y_val))
+				hist = model.fit(mols, y, 
+					nb_epoch = nb_epoch, 
+					batch_size = batch_size, 
+					validation_split = (1 - float(len(mols_train))/(len(mols_val) + len(mols_train))),
+					verbose = verbose,
+					callbacks = callbacks)	
+			else:
+				hist = model.fit(np.array(mols_train), np.array(y_train), 
+					nb_epoch = nb_epoch, 
+					batch_size = batch_size, 
+					verbose = verbose,
+					callbacks = callbacks)	
+			
+			loss = []; val_loss = []
+			if 'loss' in hist.history: loss = hist.history['loss']
+			if 'val_loss' in hist.history: val_loss = hist.history['val_loss']
+
+	except KeyboardInterrupt:
+		print('User terminated training early (intentionally)')
+
+	return (model, loss, val_loss)
+

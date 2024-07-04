@@ -7,9 +7,8 @@ import numpy as np
 
 sys.path.append('/main')
 from model import build_model
-
-sys.path.append('/main')
 from data import get_data_one
+from model import train_model
 
 #You can use this to write Python programs which can be customized by end users easily.
 def read_config(file_path):
@@ -189,12 +188,12 @@ if __name__ == '__main__':#to designate a section of code that should only be ex
 			if '__name__' in kwargs:
 				del kwargs['__name__'] #  from configparser
 			if 'nb_epoch' in kwargs:
-				kwargs['nb_epoch'] = int(kwargs['nb_epoch'])
+				kwargs['nb_epoch'] = kwargs['nb_epoch']
 			if 'batch_size' in kwargs:
-				kwargs['batch_size'] = int(kwargs['batch_size'])
+				kwargs['batch_size'] = kwargs['batch_size']
 			if 'patience' in kwargs:
-				kwargs['patience'] = int(kwargs['patience'])
-			(model, loss, val_loss) = train_model(model, data, **kwargs)
+				kwargs['patience'] = kwargs['patience']
+			train_model(model, data, **kwargs)
 			print('...trained model')
 		except KeyboardInterrupt:
 			pass
