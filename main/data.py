@@ -149,8 +149,8 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 		np.random.shuffle(training_indices)
 		training_ratio = float(training_ratio)
 		split = int(len(training_indices) * training_ratio)
-		cbu_train,   cbu_val    = [cbu_train[i] for i in training_indices[:split]],   [cbu_train[i] for i in training_indices[split:]]
-		y_train,      y_val       = [y_train[i] for i in training_indices[:split]],      [y_train[i] for i in training_indices[split:]]
+		cbu_train,   cbu_val    = [cbu_train[i] for i in training_indices[:split]],   [cbu_val[i] for i in training_indices[split:]]
+		y_train,      y_val       = [y_train[i] for i in training_indices[:split]],      [y_val[i] for i in training_indices[split:]]
 
 		print('Total training: {}'.format(len(y_train)))
 		print('Total validation: {}'.format(len(y_val)))

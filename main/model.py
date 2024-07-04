@@ -3,6 +3,7 @@ from tensorflow.keras.layers import Input, Dense, Dropout  # TensorFlow/Keras la
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam, RMSprop, Adagrad, Adadelta
 from tensorflow.keras.utils import plot_model
+from tensorflow.keras.callbacks import LearningRateScheduler, EarlyStopping
 import numpy as np
 
 def build_model(embedding_size = 63, lr = 0.01, optimizer = 'adam', depth = 2, 
@@ -128,6 +129,12 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 	print('{} to validate on'.format(len(y_val)))
 	#print('{} to test on'.format(len(smiles_val)))
 
+	def train_step(single_z, single_y_as_array):
+		return model.train_on_batch([single_z], single_y_as_array)
+
+	def test_step(single_z, single_y_as_array):
+		return model.test_on_batch([single_z], single_y_as_array)
+
 	# Create learning rate function
 	if lr_func:
 		lr_func_string = 'def lr(epoch):\n    return {}\n'.format(lr_func)
@@ -145,85 +152,28 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 		batch_size = int(batch_size)
 		patience = int(patience)
 
-		if batch_size == 1: # DO NOT NEED TO PAD
-			print("entrei aquiii")
-			wait = 0
-			prev_best_val_loss = 99999999
-			for i in range(nb_epoch):
-				this_loss = []
-				this_val_loss = []
-				if lr_func: model.optimizer.learning_rate.set_value(lr(i))
-				print('Epoch {}/{}, lr = {}'.format(i + 1, nb_epoch, model.optimizer.learning_rate.numpy()))
+		# When the batch_size is larger than one, we have padded mol tensors
+		# which  means we need to concatenate them but can use Keras' built-in
+		# training functions with callbacks, validation_split, etc.
+		if lr_func:
+			callbacks = [LearningRateScheduler(lr)]
+		else:
+			callbacks = []
+		if patience != -1:
+			callbacks.append(EarlyStopping(patience = patience, verbose = 1))
 
-				plot_model(model, show_shapes=True)
-
-				# Run through training set
-				if verbose: print('Training...')
-				training_order = list(range(len(y_train)))
-				np.random.shuffle(training_order)
-				for j in training_order:
-					single_z = np.array(cbu_train[j])
-					print(single_z.shape)
-					single_y_as_array = np.reshape(y_train[j], (1, -1))
-					sloss = model.train_on_batch(
-						[single_z],
-						single_y_as_array
-					)
-					this_loss.append(sloss)
-
-				# Run through testing set
-				if verbose: print('Validating..')
-				for j in range(len(y_val)):
-					single_z = np.array(cbu_val[j])
-					single_y_as_array = np.reshape(y_val[j], (1, -1))
-					sloss = model.test_on_batch(
-						[single_z],
-						single_y_as_array
-					)					
-					this_val_loss.append(sloss)
-				
-				loss.append(np.mean(this_loss))
-				val_loss.append(np.mean(this_val_loss))
-				print('loss: {}\tval_loss: {}'.format(loss[i], val_loss[i]))
-
-				# Check progress
-				if np.mean(this_val_loss) < prev_best_val_loss:
-					wait = 0
-					prev_best_val_loss = np.mean(this_val_loss)
-					if patience == -1:
-						model.save_weights('best.h5', overwrite=True)
-				else:
-					wait = wait + 1
-					print('{} epochs without val_loss progress'.format(wait))
-					if wait == patience:
-						print('stopping early!')
-						break
-			if patience == -1:
-				model.load_weights('best.h5')
-
-		else: 
-			# When the batch_size is larger than one, we have padded mol tensors
-			# which  means we need to concatenate them but can use Keras' built-in
-			# training functions with callbacks, validation_split, etc.
-			if lr_func:
-				callbacks = [LearningRateScheduler(lr)]
-			else:
-				callbacks = []
-			if patience != -1:
-				callbacks.append(EarlyStopping(patience = patience, verbose = 1))
-
-			if mols_val:
-				mols = np.vstack((mols_train, mols_val))
+			if cbu_val:
+				cbu = np.vstack((cbu_train, cbu_val))
 				y = np.concatenate((y_train, y_val))
-				hist = model.fit(mols, y, 
-					nb_epoch = nb_epoch, 
+				hist = model.fit(cbu, y, 
+					epochs = nb_epoch, 
 					batch_size = batch_size, 
-					validation_split = (1 - float(len(mols_train))/(len(mols_val) + len(mols_train))),
+					validation_split = (1 - float(len(y_train))/(len(y_val) + len(y_train))),
 					verbose = verbose,
 					callbacks = callbacks)	
 			else:
-				hist = model.fit(np.array(mols_train), np.array(y_train), 
-					nb_epoch = nb_epoch, 
+				hist = model.fit(np.array(cbu_train), np.array(y_train), 
+					epochs = nb_epoch, 
 					batch_size = batch_size, 
 					verbose = verbose,
 					callbacks = callbacks)	
@@ -236,4 +186,15 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 		print('User terminated training early (intentionally)')
 
 	return (model, loss, val_loss)
+
+def save_model(model, loss, val_loss, fpath = '', config = {}, tstamp = ''):
+	'''Saves NN model object and associated information.
+
+	inputs:
+		model - a Keras model
+		loss - list of training losses 
+		val_loss - list of validation losses
+		fpath - root filepath to save everything to (with .json, h5, png, info)
+		config - the configuration dictionary that defined this model 
+		tstamp - current timestamp to log in info file'''
 

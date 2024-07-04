@@ -4,6 +4,7 @@ import time
 import os
 from os import path
 import numpy as np
+import datetime
 
 sys.path.append('/main')
 from model import build_model
@@ -193,8 +194,22 @@ if __name__ == '__main__':#to designate a section of code that should only be ex
 				kwargs['batch_size'] = kwargs['batch_size']
 			if 'patience' in kwargs:
 				kwargs['patience'] = kwargs['patience']
-			train_model(model, data, **kwargs)
+			(model, loss, val_loss) = train_model(model, data, **kwargs)
 			print('...trained model')
 		except KeyboardInterrupt:
 			pass
 	
+		###################################################################################
+		### SAVE MODEL
+		###################################################################################
+
+		# Get the current time
+		tstamp = datetime.datetime.utcnow().strftime('%m-%d-%Y_%H-%M')
+		print('...saving model')
+		save_model(model, 
+			loss,
+			val_loss,
+			fpath = fpath,
+			config = config, 
+			tstamp = tstamp)
+		print('...saved model')
