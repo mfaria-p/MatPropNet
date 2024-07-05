@@ -24,6 +24,7 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 		delimeter = '\t'
 		dset = 'cbu-iza'
 		data_fpath = os.path.join(data_froot, 'iza.fp')
+		z_index = 0
 		y_index = -1
 		def y_func(x): return x
 		y_label = 'Framework density (T/1000 Å^3)'
@@ -63,18 +64,20 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 	cbu = []
 	cbu_array = []
 	y = []
+	z = []
 	print('processing data...')
 	# Randomize
 	np.random.shuffle(data)
 
 	try:
 		for j in range(251):
+			z.append(data[j][z_index])
 			cbu_array = []
-			for i in range(len(data[j]) - 1):
+			for i in range(1, len(data[j]) - 1):
 				cbu_array.append(int(data[j][i]))
 			cbu.append((np.array(cbu_array)))
 
-			this_y = y_func(float(data[j][-1]))
+			this_y = y_func(float(data[j][y_index]))
 			y.append(this_y)  # Measured log(solubility M/L)
 
 	except Exception as e:
@@ -92,12 +95,16 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 		y_notrain  = y[division:]
 		cbu_train = cbu[:division]
 		cbu_notrain = cbu[division:]
+		z_train = z[:division]
+		z_notrain = z[division:]
 
 		# Split notrain up
 		y_val       = y_notrain[:(len(y_notrain) / 2)] # first half
 		cbu_val  = cbu_notrain[:(len(y_notrain) / 2)] # first half
+		z_val  = z_notrain[:(len(z_notrain) / 2)] # first half
 		y_test      = y_notrain[(len(y_notrain) / 2):] # second half
 		cbu_test = cbu_notrain[(len(y_notrain) / 2):] # second half
+		z_test = z_notrain[(len(z_notrain) / 2):] # second half
 		print('Training size: {}'.format(len(y_train)))
 		print('Validation size: {}'.format(len(y_val)))
 		print('Testing size: {}'.format(len(y_test)))
@@ -107,10 +114,13 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 		# Create training/development split
 		cbu_train = cbu
 		y_train = y
+		z_train = z
 		cbu_val    = []
 		y_val       = []
+		z_val = []
 		cbu_test   = []
 		y_test      = []
+		z_test = []
 		print('Training size: {}'.format(len(y_train)))
 		print('Validation size: {}'.format(len(y_val)))
 		print('Testing size: {}'.format(len(y_test)))
@@ -134,23 +144,27 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 		# Split up data
 		folded_cbu 	= [cbu[x:x+target_fold_size]   for x in range(0, N, target_fold_size)]
 		folded_y 		= [y[x:x+target_fold_size]      for x in range(0, N, target_fold_size)]
+		folded_z 	= [z[x:x+target_fold_size] for x in range(0, N, target_fold_size)]
 		print('Split data into {} folds'.format(folds))
 		print('...using fold {}'.format(this_fold + 1))
 
 		# Recombine into training and testing
 		cbu_train   = [x for fold in (folded_cbu[:this_fold] + folded_cbu[(this_fold + 1):])     for x in fold]
 		y_train      = [x for fold in (folded_y[:this_fold] + folded_y[(this_fold + 1):])           for x in fold]
+		z_train = [x for fold in (folded_z[:this_fold] + folded_z[(this_fold + 1):]) for x in fold]
 		# Test is this_fold
 		cbu_test    = folded_cbu[this_fold]
 		y_test       = folded_y[this_fold]
+		z_test  = folded_z[this_fold]
 
 		# Define validation set as random 10% of training
 		training_indices = list(range(len(y_train)))
 		np.random.shuffle(training_indices)
 		training_ratio = float(training_ratio)
 		split = int(len(training_indices) * training_ratio)
-		cbu_train,   cbu_val    = [cbu_train[i] for i in training_indices[:split]],   [cbu_val[i] for i in training_indices[split:]]
-		y_train,      y_val       = [y_train[i] for i in training_indices[:split]],      [y_val[i] for i in training_indices[split:]]
+		cbu_train,   cbu_val    = [cbu_train[i] for i in training_indices[:split]],   [cbu_train[i] for i in training_indices[split:]]
+		y_train,      y_val       = [y_train[i] for i in training_indices[:split]],      [y_train[i] for i in training_indices[split:]]
+		z_train, z_val  = [z_train[i] for i in training_indices[:split]], [z_train[i] for i in training_indices[split:]]
 
 		print('Total training: {}'.format(len(y_train)))
 		print('Total validation: {}'.format(len(y_val)))
@@ -164,14 +178,14 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 	### REPACKAGE AS DICTIONARIES
 	###################################################################################
 	if 'cv_full' in data_split: # cross-validation, but use 'test' as validation
-		train = {}; train['cbu'] = cbu_train; train['y'] = y_train; train['y_label'] = y_label
-		val   = {}; val['cbu']   = cbu_test;   val['y']   = y_test;   val['y_label']   = y_label
-		test  = {}; test['cbu']  = [];  test['y']  = [];  test['y_label']  = []
+		train = {}; train['cbu'] = cbu_train; train['y'] = y_train; train['z'] = z_train; train['y_label'] = y_label
+		val   = {}; val['cbu']   = cbu_test;   val['y']   = y_test; val['z']   = z_test; val['y_label']   = y_label
+		test  = {}; test['cbu']  = [];  test['y']  = [];  test['z']  = []; test['y_label']  = []
 
 	else:
 
-		train = {}; train['cbu'] = cbu_train; train['y'] = y_train; train['y_label'] = y_label
-		val   = {}; val['cbu']   = cbu_val;   val['y']   = y_val;   val['y_label']   = y_label
-		test  = {}; test['cbu']  = cbu_test;  test['y']  = y_test;  test['y_label']  = y_label
+		train = {}; train['cbu'] = cbu_train; train['y'] = y_train; train['z'] = z_train; train['y_label'] = y_label
+		val   = {}; val['cbu']   = cbu_val;   val['y']   = y_val;   val['z']   = z_val; val['y_label']   = y_label
+		test  = {}; test['cbu']  = cbu_test;  test['y']  = y_test;  test['z']  = z_test; test['y_label']  = y_label
 
 	return (train, val, test)

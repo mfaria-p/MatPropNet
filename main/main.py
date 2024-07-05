@@ -9,7 +9,7 @@ import datetime
 sys.path.append('/main')
 from model import build_model
 from data import get_data_one
-from model import train_model, save_model
+from model import train_model, save_model, test_model
 
 #You can use this to write Python programs which can be customized by end users easily.
 def read_config(file_path):
@@ -213,3 +213,12 @@ if __name__ == '__main__':#to designate a section of code that should only be ex
 			config = config, 
 			tstamp = tstamp)
 		print('...saved model')
+
+		###################################################################################
+		### TEST MODEL
+		###################################################################################
+
+		print('...testing model')
+		data_withresiduals = test_model(model, data, fpath, tstamp = tstamp,
+			batch_size = int(config['TRAINING']['batch_size']))
+		print('...tested model')
