@@ -19,10 +19,10 @@ sys.path.append('/main')
 from saving import save_model_history
 from stats import ft_mse, ft_mae, ft_q, linreg
 
-def build_model(embedding_size = 63, lr = 0.01, optimizer = 'adam', depth = 2, 
-	scale_output = 0.05, padding = True, hidden = 0, hidden2 = 0, loss = 'mse', hidden_activation = 'tanh',
-	output_activation = 'linear', dr1 = 0.0, dr2 = 0.0, output_size = 1, sum_after = False,
-	molecular_attributes = False, use_fp = None, inner_rep = 32, verbose = True ):
+def build_model(embedding_size = 63, lr = 0.001, optimizer = 'adam', depth = 2, 
+	scale_output = 0.05, padding = True, hidden = 100, hidden2 = 50, loss = 'mse', hidden_activation = 'tanh',
+	output_activation = 'linear', dr1 = 0.5, dr2 = 0.5, output_size = 1, sum_after = False,
+	molecular_attributes = False, inner_rep = 32, verbose = True ):
 	#if verbose is used to control whether additional logging information is printed.
     #When verbose is True, the script provides detailed output about the model construction process.
 
@@ -48,18 +48,13 @@ def build_model(embedding_size = 63, lr = 0.01, optimizer = 'adam', depth = 2,
 					passing them from the network layer (during updates)
 		molecular_attributes - whether to include additional molecular 
 					attributes in the atom-level features (recommended)
-		use_fp - whether the representation used is actually a fingerprint
-					and not a convolutional network (for benchmarking)
 
 	outputs:
 		model - a Keras model'''
 
 	
 	# Base model
-	if type(use_fp) == type(None):
-		print('We need a fingerprint input for this tests!')
-	else:
-		FPs = Input(shape = (63,), name = "input fingerprint")
+	FPs = Input(shape = (63,), name = "input fingerprint")
 
     #Dropout is applied after dense layers. Dropout layers are used to prevent overfitting by randomly setting a fraction of the
     #neurons to zero during training, encouraging the network to learn more general and robust features.
@@ -159,8 +154,6 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 		batch_size = int(batch_size)
 		patience = int(patience)
 
-		# When the batch_size is larger than one, we have padded mol tensors
-		# which  means we need to concatenate them but can use Keras' built-in
 		# training functions with callbacks, validation_split, etc.
 		if lr_func:
 			callbacks = [LearningRateScheduler(lr)]
@@ -172,6 +165,9 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 			if cbu_val:
 				cbu = np.vstack((cbu_train, cbu_val))
 				y = np.concatenate((y_train, y_val))
+				""" The validation set is used to optimize the model's hyperparameters (e.g., learning rate, number of layers, batch size). 
+				These are parameters that are not learned directly from the training data but are set before the learning process begins. """
+
 				hist = model.fit(cbu, y, 
 					epochs = nb_epoch, 
 					batch_size = batch_size, 
@@ -232,7 +228,7 @@ def save_model(model, loss, val_loss, fpath = '', config = {}, tstamp = ''):
 	print('...saved model to {}.[json, h5, png, info]'.format(fpath))
 	return True
 
-def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128, return_test_MSE = False, verbose = True):
+def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128, return_test_MSE = False, verbose = False):
 	'''This function evaluates model performance using test data.
 
 	inputs:

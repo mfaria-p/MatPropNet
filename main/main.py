@@ -58,8 +58,6 @@ if __name__ == '__main__':#to designate a section of code that should only be ex
 		del data_kwargs['__name__'] #  from configparser
 	if 'batch_size' in config['TRAINING']:
 		data_kwargs['batch_size'] = config['TRAINING']['batch_size']
-	if 'use_fp' in config['ARCHITECTURE']: #use fingerprints
-		data_kwargs['use_fp'] = config['ARCHITECTURE']['use_fp']
 	if 'shuffle_seed' in data_kwargs:
 	#If shuffle_seed is provided in the configuration, it is converted to an integer and used.
 	#If shuffle_seed is not provided, the current time (in seconds since the epoch) is used as a seed. 
@@ -153,7 +151,7 @@ if __name__ == '__main__':#to designate a section of code that should only be ex
 		if 'weights_fpath' in config['IO']:
 			weights_fpath = config['IO']['weights_fpath']
 		else:
-			weights_fpath = fpath + '.h5'
+			weights_fpath = fpath + '.weights.h5'
 
 		try:
 			use_old_weights = input_to_bool(config['IO']['use_existing_weights'])
