@@ -21,7 +21,7 @@ from stats import ft_mse, ft_mae, ft_q, linreg
 
 def build_model(embedding_size = 63, lr = 0.001, optimizer = 'adam', depth = 2, 
 	scale_output = 0.05, padding = True, hidden = 100, hidden2 = 50, loss = 'mse', hidden_activation = 'tanh',
-	output_activation = 'linear', dr1 = 0.5, dr2 = 0.5, output_size = 1, sum_after = False,
+	output_activation = 'linear', dr1 = 0.25, dr2 = 0.25, output_size = 1, sum_after = False,
 	molecular_attributes = False, inner_rep = 32, verbose = True ):
 	#if verbose is used to control whether additional logging information is printed.
     #When verbose is True, the script provides detailed output about the model construction process.
@@ -313,6 +313,8 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128, return_
 				'\na` = {}, r^2` = {}'.format(round3(ap), round3(r2p)))
 			plt.grid(True)
 			plt.plot(true, true * a, 'r--')
+			# Plot diagonal line where actual = predicted
+			plt.plot([min_y, max_y], [min_y, max_y], 'b--')
 			plt.axis([min_y, max_y, min_y, max_y])	
 			plt.savefig(test_fpath + ' {}.png'.format(set_label), bbox_inches = 'tight')
 			plt.clf()
@@ -350,13 +352,18 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128, return_
 	# Save
 	with open(test_fpath + '.test', 'w') as fid:
 		fid.write('{} tested {}, predicting {}\n\n'.format(fpath, tstamp, y_label))		
-		fid.write('test entry\tzeolite type\tactual\tpredicted\tactual - predicted\n')
+		fid.write('test entry\tzeolite type\tactual\tpredicted\tactual - predicted\trelative error(%)\n')
 		for i in range(len(y_test)):
-			fid.write('{}\t{}\t{}\t{}\t{}\n'.format(i, 
+			fid.write('{}\t{}\t{}\t{}\t{}\t{}'.format(i, 
 				z_test[i],
 				y_test[i], 
 				y_test_pred[i],
-				y_test[i] - y_test_pred[i]))
+				y_test[i] - y_test_pred[i],
+				((abs(y_test[i] - y_test_pred[i])/y_test[i])*100)))
+			if ((abs(y_test[i] - y_test_pred[i])/y_test[i])*100) > 10:
+				fid.write('   >10 --- outlier\n')
+			else:
+				fid.write('\n')
 
 	test_MSE = 99999
 	if y_train: 
