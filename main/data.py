@@ -20,14 +20,22 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 	### WHICH DATASET ARE WE TRYING TO USE?
 	###################################################################################
 
-	if data_label in ['cbu-iza']:
+	if data_label in ['density']:
 		delimeter = '\t'
-		dset = 'cbu-iza'
-		data_fpath = os.path.join(data_froot, 'iza.fp')
+		dset = 'density'
+		data_fpath = os.path.join(data_froot, 'density.fp')
 		z_index = 0
 		y_index = -1
 		def y_func(x): return x
 		y_label = 'Framework density (T/1000 Å^3)'
+	elif data_label in ['acessible_volume']:
+		delimeter = '\t'
+		dset = 'acessible_volume'
+		data_fpath = os.path.join(data_froot, 'acessible_volume.fp')
+		z_index = 0
+		y_index = -1
+		def y_func(x): return x
+		y_label = 'Accessible Volume (%)'
 
 #63 columns 0 e 1
 	# Other?

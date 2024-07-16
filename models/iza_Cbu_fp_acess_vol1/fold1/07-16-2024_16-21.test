@@ -1,0 +1,7 @@
+models/iza_Cbu_fp_acess_vol1/fold1 tested 07-16-2024_16-21, predicting Accessible Volume (%)
+
+test entry	zeolite type	actual	predicted	actual - predicted	relative error(%)
+0	ANO	12.41	[14.874645]	[-2.4646454]	[19.860155]   >10 --- outlier
+1	MTW	9.42	[9.860961]	[-0.44096088]	[4.6811132]
+2	SFF	13.99	[13.927402]	[0.06259823]	[0.44744983]
+3	JNT	0.0	[8.019794]	[-8.019794]	Nan

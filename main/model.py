@@ -354,13 +354,17 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128, return_
 		fid.write('{} tested {}, predicting {}\n\n'.format(fpath, tstamp, y_label))		
 		fid.write('test entry\tzeolite type\tactual\tpredicted\tactual - predicted\trelative error(%)\n')
 		for i in range(len(y_test)):
+			if y_test[i] == 0:
+				relative_error = 'Nan'
+			else:
+				relative_error = (abs(y_test[i] - y_test_pred[i])/y_test[i])*100
 			fid.write('{}\t{}\t{}\t{}\t{}\t{}'.format(i, 
 				z_test[i],
 				y_test[i], 
 				y_test_pred[i],
 				y_test[i] - y_test_pred[i],
-				((abs(y_test[i] - y_test_pred[i])/y_test[i])*100)))
-			if ((abs(y_test[i] - y_test_pred[i])/y_test[i])*100) > 10:
+				relative_error))
+			if y_test[i] != 0 and relative_error > 10:
 				fid.write('   >10 --- outlier\n')
 			else:
 				fid.write('\n')
