@@ -36,6 +36,14 @@ def get_data_one(data_label = '', shuffle_seed = None, batch_size = 1,
 		y_index = -1
 		def y_func(x): return x
 		y_label = 'Accessible Volume (%)'
+	elif data_label in ['max_diameter']:
+		delimeter = '\t'
+		dset = 'max_diameter'
+		data_fpath = os.path.join(data_froot, 'max_diam_diff.fp')
+		z_index = 0
+		y_index = -1
+		def y_func(x): return x
+		y_label = 'Max. diameter of a sphere, that can diffuse along (the maximum between the 3) (Å)'
 
 #63 columns 0 e 1
 	# Other?

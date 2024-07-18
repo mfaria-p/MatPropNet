@@ -68,8 +68,8 @@ def build_model(embedding_size = 63, lr = 0.001, optimizer = 'adam', depth = 2,
 		h1d = Dropout(dr1)(h1)
 		if verbose: print('    model: added {} Dense layer (-> {})'.format(hidden_activation, hidden))
 		if hidden2 > 0:
-			h2 = Dense(hidden2, activation = hidden_activation)(h1)
-			if verbose: print('    model: added {} Dense layer (-> {})'.format(hidden_activation, hidden2))
+			h2 = Dense(hidden2, activation = hidden_activation)(h1d)
+			if verbose: print('boop    model: added {} Dense layer (-> {})'.format(hidden_activation, hidden2))
 			h = Dropout(dr2)(h2)
 		else:
 			h = h1d
