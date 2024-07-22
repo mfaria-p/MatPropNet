@@ -69,7 +69,7 @@ def build_model(embedding_size = 63, lr = 0.001, optimizer = 'adam', depth = 2,
 		if verbose: print('    model: added {} Dense layer (-> {})'.format(hidden_activation, hidden))
 		if hidden2 > 0:
 			h2 = Dense(hidden2, activation = hidden_activation)(h1d)
-			if verbose: print('boop    model: added {} Dense layer (-> {})'.format(hidden_activation, hidden2))
+			if verbose: print('    model: added {} Dense layer (-> {})'.format(hidden_activation, hidden2))
 			h = Dropout(dr2)(h2)
 		else:
 			h = h1d
@@ -138,9 +138,9 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 	#print('{} to test on'.format(len(smiles_val)))
 
 	# Create learning rate function
-	if lr_func:
+	""" if lr_func:
 		lr_func_string = 'def lr(epoch):\n    return {}\n'.format(lr_func)
-		exec(lr_func_string)
+		exec(lr_func_string) """
 
 
 	# Fit (allows keyboard interrupts in the middle)
@@ -155,10 +155,10 @@ def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patie
 		patience = int(patience)
 
 		# training functions with callbacks, validation_split, etc.
-		if lr_func:
+		""" if lr_func:
 			callbacks = [LearningRateScheduler(lr)]
-		else:
-			callbacks = []
+		else: """
+		callbacks = []
 		if patience != -1:
 			callbacks.append(EarlyStopping(patience = patience, verbose = 1))
 
