@@ -69,9 +69,6 @@ if __name__ == '__main__':#to designate a section of code that should only be ex
 		data_kwargs['truncate_to'] = data_kwargs['truncate_to']
 	if 'training_ratio' in data_kwargs:# representing the proportion of data for training.
 		data_kwargs['training_ratio'] = data_kwargs['training_ratio']
-	if 'molecular_attributes' in data_kwargs: #Converts the value to a boolean. This parameter 
-		#likely indicates whether molecular attributes are to be used in the data processing or modeling.
-		data_kwargs['molecular_attributes'] = str(input_to_bool(data_kwargs['molecular_attributes']))
 	
 	if 'cv_folds' in data_kwargs:
 		try:
@@ -126,9 +123,6 @@ if __name__ == '__main__':#to designate a section of code that should only be ex
 				kwargs['sum_after'] = str(input_to_bool(kwargs['sum_after']))
 			if 'optimizer' in kwargs:
 				kwargs['optimizer'] = kwargs['optimizer']
-			 
-			if 'molecular_attributes' in config['DATA']:
-				kwargs['molecular_attributes'] = config['DATA']['molecular_attributes']
 
 			model = build_model(**kwargs)
 			print('...built untrained model {}'.format(cv_fold))

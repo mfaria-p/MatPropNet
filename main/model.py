@@ -293,26 +293,22 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128, return_
 			mse = ft_mse(true, pred)
 			mae = ft_mae(true, pred)
 			q = ft_q(true, pred)
-			(r2, a) = linreg(true, pred) # predicted v observed
-			(r2p, ap) = linreg(pred, true) # observed v predicted
+			""" (r2, a) = linreg(true, pred) # predicted v observed
+			(r2p, ap) = linreg(pred, true) """ # observed v predicted
 
 			# Print
 			print('  mse = {}, mae = {}'.format(mse, mae))
 			if verbose:
 				print('  q = {}'.format(q))
-				print('  r2 through origin = {} (pred v. true), {} (true v. pred)'.format(r2, r2p))
-				print('  slope through origin = {} (pred v. true), {} (true v. pred)'.format(a[0], ap[0]))
 
 			# Create parity plot
 			plt.scatter(true, pred, alpha = 0.5)
 			plt.xlabel('Actual')
 			plt.ylabel('Predicted')
 			plt.title('Parity plot for {} ({} set, N = {})'.format(y_label, set_label, len(true)) + 
-				'\nMSE = {}, MAE = {}, q = {}, AUC = {}'.format(round3(mse), round3(mae), round3(q), AUC) + 
-				'\na = {}, r^2 = {}'.format(round3(a), round3(r2)) + 
-				'\na` = {}, r^2` = {}'.format(round3(ap), round3(r2p)))
+				'\nMSE = {}, MAE = {}'.format(round3(mse), round3(mae)))
 			plt.grid(True)
-			plt.plot(true, true * a, 'r--')
+			""" plt.plot(true, true * a, 'r--') """
 			# Plot diagonal line where actual = predicted
 			plt.plot([min_y, max_y], [min_y, max_y], 'b--')
 			plt.axis([min_y, max_y, min_y, max_y])	
@@ -350,6 +346,7 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128, return_
 		raise ValueError('Nothing to evaluate?')
 	
 	# Save
+	print(type(y_test_pred[0]))
 	with open(test_fpath + '.test', 'w') as fid:
 		fid.write('{} tested {}, predicting {}\n\n'.format(fpath, tstamp, y_label))		
 		fid.write('test entry\tzeolite type\tactual\tpredicted\tactual - predicted\trelative error(%)\n')
@@ -358,12 +355,12 @@ def test_model(model, data, fpath, tstamp = 'no_time', batch_size = 128, return_
 				relative_error = 'Nan'
 			else:
 				relative_error = (abs(y_test[i] - y_test_pred[i])/y_test[i])*100
-			fid.write('{}\t{}\t{}\t{}\t{}\t{}'.format(i, 
+			fid.write('{}\t{}\t{}\t{:.5f}\t{:.5f}\t{:.5f}'.format(i, 
 				z_test[i],
 				y_test[i], 
-				y_test_pred[i],
-				y_test[i] - y_test_pred[i],
-				relative_error))
+				float(y_test_pred[i]),
+				float(y_test[i] - y_test_pred[i]),
+				float(relative_error)))
 			if y_test[i] != 0 and relative_error > 10:
 				fid.write('   >10 --- outlier\n')
 			else:
