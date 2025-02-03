@@ -65,10 +65,6 @@ if __name__ == '__main__':#to designate a section of code that should only be ex
 		data_kwargs['shuffle_seed'] = data_kwargs['shuffle_seed']
 	else:
 		data_kwargs['shuffle_seed'] = str(time.time())
-	if 'truncate_to' in data_kwargs:#likely used to limit the data size.
-		data_kwargs['truncate_to'] = data_kwargs['truncate_to']
-	if 'training_ratio' in data_kwargs:# representing the proportion of data for training.
-		data_kwargs['training_ratio'] = data_kwargs['training_ratio']
 	
 	if 'cv_folds' in data_kwargs:
 		try:
@@ -102,27 +98,8 @@ if __name__ == '__main__':#to designate a section of code that should only be ex
 				#se houver mais do que um batch (ou seja processarmos um numero de amostras do total a testar por vez),
 				#entao o padding (some adjustments) é necessario
 				kwargs['padding'] = str(int(config['TRAINING']['batch_size']) > 1) 
-			if 'embedding_size' in kwargs: 
-				#é o tamanho de cada fingerprint
-				kwargs['embedding_size'] = kwargs['embedding_size']
-			if 'hidden' in kwargs: 
-				kwargs['hidden'] = kwargs['hidden']
-			if 'hidden2' in kwargs:
-				kwargs['hidden2'] = kwargs['hidden2']
-			if 'depth' in kwargs: 
-				kwargs['depth'] = kwargs['depth']
-			if 'scale_output' in kwargs: 
-				kwargs['scale_output'] = kwargs['scale_output']
-			if 'dr1' in kwargs:
-				kwargs['dr1'] = kwargs['dr1']
-			if 'dr2' in kwargs:
-				kwargs['dr2'] = kwargs['dr2']
-			if 'output_size' in kwargs:
-				kwargs['output_size'] = kwargs['output_size']
 			if 'sum_after' in kwargs:
 				kwargs['sum_after'] = str(input_to_bool(kwargs['sum_after']))
-			if 'optimizer' in kwargs:
-				kwargs['optimizer'] = kwargs['optimizer']
 
 			model = build_model(**kwargs)
 			print('...built untrained model {}'.format(cv_fold))
@@ -180,12 +157,6 @@ if __name__ == '__main__':#to designate a section of code that should only be ex
 			kwargs = config['TRAINING']
 			if '__name__' in kwargs:
 				del kwargs['__name__'] #  from configparser
-			if 'nb_epoch' in kwargs:
-				kwargs['nb_epoch'] = kwargs['nb_epoch']
-			if 'batch_size' in kwargs:
-				kwargs['batch_size'] = kwargs['batch_size']
-			if 'patience' in kwargs:
-				kwargs['patience'] = kwargs['patience']
 			(model, loss, val_loss) = train_model(model, data, **kwargs)
 			print('...trained model')
 		except KeyboardInterrupt:

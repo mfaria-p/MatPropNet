@@ -19,7 +19,112 @@ sys.path.append('/main')
 from saving import save_model_history
 from stats import ft_mse, ft_mae, ft_q, linreg
 
-def build_model(embedding_size = 63, lr = 0.001, optimizer = 'adam', depth = 2, 
+def build_model(embedding_size=63, lr=0.001, optimizer='adam', depth=2, 
+                scale_output=0.05, padding=True, hidden=100, hidden2=50, 
+                loss='mse', hidden_activation='tanh', output_activation='linear', 
+                dr1=0.25, dr2=0.25, output_size=1, sum_after=False,
+                molecular_attributes=False, inner_rep=32, verbose=True):
+    """
+    Parameters:
+        embedding_size (int): Size of fingerprint for the input layer.
+        lr (float): Learning rate for the optimizer.
+        optimizer (str): Optimizer type ('adam', 'rmsprop', 'adagrad', 'adadelta').
+        depth (int): Number of hidden layers.
+        scale_output (float): Scaling factor for output weights.
+        padding (bool): Whether molecular tensors are padded.
+        hidden (int): Number of nodes in the first hidden layer.
+        hidden2 (int): Number of nodes in the second hidden layer.
+        loss (str): Loss function to use.
+        hidden_activation (str): Activation function for hidden layers.
+        output_activation (str): Activation function for output layer.
+        dr1 (float): Dropout rate after the first hidden layer.
+        dr2 (float): Dropout rate after the second hidden layer.
+        output_size (int): Number of output nodes.
+        sum_after (bool): Whether to sum contributions after passing through the network layer.
+        molecular_attributes (bool): Include additional molecular attributes in features.
+        inner_rep (int): Size of the internal representation.
+        verbose (bool): Print model summary and layer details if True.
+
+    Returns:
+        model (Model): Compiled Keras model.
+    """
+
+    hidden = int(hidden)
+    hidden2 = int(hidden2)
+    embedding_size = int(embedding_size)
+    depth = int(depth)
+    dr1 = float(dr1)
+    dr2 = float(dr2)
+    lr = float(lr)
+    # Input Layer
+    inputs = Input(shape=(embedding_size,), name="input_fingerprint")
+
+    # First Hidden Layer
+    if hidden > 0:
+        x = Dense(hidden, activation=hidden_activation)(inputs)
+        x = Dropout(dr1)(x)
+        if verbose:
+            print(f'Added first Dense layer with {hidden} units, activation={hidden_activation}, dropout={dr1}')
+    else:
+        x = inputs
+
+    # Second Hidden Layer
+    if hidden2 > 0:
+        x = Dense(hidden2, activation=hidden_activation)(x)
+        x = Dropout(dr2)(x)
+        if verbose:
+            print(f'Added second Dense layer with {hidden2} units, activation={hidden_activation}, dropout={dr2}')
+
+    # Additional Hidden Layers based on depth
+    for i in range(depth - 2):
+        x = Dense(hidden2, activation=hidden_activation)(x)
+        x = Dropout(dr2)(x)
+        if verbose:
+            print(f'Added additional Dense layer {i + 3} with {hidden2} units, activation={hidden_activation}, dropout={dr2}')
+
+    # Output Layer
+    outputs = Dense(output_size, activation=output_activation)(x)
+    if verbose:
+        print(f'Added output Dense layer with {output_size} units, activation={output_activation}')
+
+    # Build Model
+    model = Model(inputs=inputs, outputs=outputs)
+    
+    if verbose:
+        model.summary()
+
+    # Optimizer Selection
+    optimizers = {
+        'adam': Adam(learning_rate=lr),
+        'rmsprop': RMSprop(learning_rate=lr),
+        'adagrad': Adagrad(learning_rate=lr),
+        'adadelta': Adadelta()
+    }
+
+    if optimizer not in optimizers:
+        raise ValueError(f"Unrecognized optimizer '{optimizer}'. Available options: {list(optimizers.keys())}")
+
+    selected_optimizer = optimizers[optimizer]
+
+    # Custom Loss Handling
+    if loss == 'custom':
+        loss = 'mse'
+    elif loss == 'custom2':
+        loss = 'binary_crossentropy'
+
+    if verbose:
+        print(f'Compiling model with optimizer={optimizer}, learning_rate={lr}, loss={loss}')
+
+    # Compile Model
+    model.compile(optimizer=selected_optimizer, loss=loss)
+
+    if verbose:
+        print('Model compilation done.')
+
+    return model
+
+
+""" def build_model(embedding_size = 63, lr = 0.001, optimizer = 'adam', depth = 2, 
 	scale_output = 0.05, padding = True, hidden = 100, hidden2 = 50, loss = 'mse', hidden_activation = 'tanh',
 	output_activation = 'linear', dr1 = 0.25, dr2 = 0.25, output_size = 1, sum_after = False,
 	molecular_attributes = False, inner_rep = 32, verbose = True ):
@@ -106,7 +211,7 @@ def build_model(embedding_size = 63, lr = 0.001, optimizer = 'adam', depth = 2,
 	model.compile(loss = loss, optimizer = optimizer)
 	if verbose: print('done')
 
-	return model
+	return model """
 
 def train_model(model, data, nb_epoch = 0, batch_size = 1, lr_func = None, patience = 10, verbose = True):
 	'''Trains the model.
