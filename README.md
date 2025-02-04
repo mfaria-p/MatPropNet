@@ -44,7 +44,7 @@ Ensure you have **TensorFlow**, **Keras**, and other required libraries installe
 
 ### **2. Prepare Data**
 
-Place your datasets in the **data/** directory. The datasets provided were created from my [Zeolite Web Scraping project](https://github.com/mfaria-p/Webscrapping_zeolites.git), and are composed of **fingerprints** that were created based on the composite building units of each zeolite.
+Place your datasets in the **data/** directory. The datasets provided were created from my [Zeolite Web Scraping project](https://github.com/mfaria-p/Webscrapping_zeolites.git), and are composed of **fingerprints** that were generated based on the composite building units of each zeolite, through Python techniques.
 
 ### **3. Configure Models**
 
