@@ -45,15 +45,15 @@ def get_data_hyper(data_label= '', shuffle_seed=None, batch_size=1, data_split='
 
     if data_label == 'density':
         delimiter = '\t'
-        data_fpath = os.path.join(data_froot, 'density.fp')
+        data_fpath = os.path.join(data_froot, 'density.tsv')
         y_label = 'Framework density (T/1000 Å^3)'
     elif data_label == 'acessible_volume':
         delimiter = '\t'
-        data_fpath = os.path.join(data_froot, 'acessible_volume.fp')
+        data_fpath = os.path.join(data_froot, 'acessible_volume.tsv')
         y_label = 'Accessible Volume (%)'
     elif data_label == 'max_diameter':
         delimiter = '\t'
-        data_fpath = os.path.join(data_froot, 'max_diam_diff.fp')
+        data_fpath = os.path.join(data_froot, 'max_diam_diff.tsv')
         y_label = 'Max. diameter of a sphere, that can diffuse along (the maximum between the 3) (Å)'
     else:
         print('Unrecognized data_label {}'.format(data_label))
