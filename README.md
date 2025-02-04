@@ -2,7 +2,9 @@
 
 ## **Overview**
 
-MatPropNet is a machine learning framework designed for predicting various properties of materials using neural networks. Built with **TensorFlow** and **Keras**, it supports **cross-validation**, **hyperparameter tuning**, and **model evaluation**. The framework's modular structure allows easy customization and experimentation through configuration files.
+MatPropNet is a machine learning framework designed for predicting various properties of materials, more concretly zeolites, using neural networks. Built with **TensorFlow** and **Keras**, it supports **cross-validation**, **hyperparameter tuning**, and **model evaluation**. The framework's modular structure allows easy customization and experimentation through configuration files.
+
+The datasets used in this framework were sourced from my [Web Scraping project](https://github.com/mfaria-p/Webscrapping_zeolites.git) on zeolites conducted as part of an Introduction and Initiation Research Internship at the Laboratory of Separation and Reaction Processes - Laboratory of Catalysis and Materials (LSRE-LCM). This project created a comprehensive database based on data from the [International Zeolite Association (IZA)](https://www.iza-structure.org/databases/), capturing key properties of 251 zeolites, including unit cell shapes, framework density, ring sizes, channel dimensions, and more. I used the composite building units of the zeolites to generate the fingerprints, which were given as input for the neural network.
 
 ---
 
@@ -42,7 +44,7 @@ Ensure you have **TensorFlow**, **Keras**, and other required libraries installe
 
 ### **2. Prepare Data**
 
-Place your datasets in the **data/** directory.
+Place your datasets in the **data/** directory. The datasets provided were created from my [Zeolite Web Scraping project](https://github.com/mfaria-p/Webscrapping_zeolites.git), and are composed of **fingerprints** that were created based on the composite building units of each zeolite.
 
 ### **3. Configure Models**
 
